@@ -3,34 +3,1061 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Realms of Eternia</title>
-    <link rel="stylesheet" href="static/css/style.css">
+    <title>REALMS OF ETERNIA - 2D Medieval Fantasy RPG</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=MedievalSharp&display=swap');
+
+        body {
+            background-color: #0d0c1d;
+            color: #e0d6b3;
+            font-family: 'MedievalSharp', cursive, sans-serif;
+            margin: 0;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .pixel-font {
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        .pixel-border {
+            border: 4px solid #4a3828;
+            border-image: linear-gradient(to bottom, #8b6d43, #3a2512) 1;
+            box-shadow: inset 0 0 10px #000, 0 0 12px rgba(0,0,0,0.8);
+        }
+
+        .panel-bg {
+            background: rgba(20, 16, 12, 0.94);
+            background-image: radial-gradient(rgba(60, 40, 20, 0.4) 1px, transparent 0);
+            background-size: 8px 8px;
+        }
+
+        .btn-medieval {
+            background: linear-gradient(to bottom, #72522c, #422d14);
+            border: 2px solid #b8975d;
+            color: #f3e5ab;
+            text-shadow: 1px 1px 2px #000;
+            transition: all 0.1s ease;
+        }
+
+        .btn-medieval:hover {
+            background: linear-gradient(to bottom, #8c6739, #54391a);
+            border-color: #ffd700;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .btn-medieval:active {
+            transform: translateY(1px);
+        }
+
+        .slot {
+            width: 48px;
+            height: 48px;
+            background: rgba(10, 8, 6, 0.8);
+            border: 2px solid #5a4531;
+            box-shadow: inset 0 0 5px #000;
+        }
+
+        .slot:hover {
+            border-color: #dfb15b;
+            background: rgba(40, 30, 20, 0.9);
+        }
+
+        .slot.active {
+            border-color: #00ffcc;
+            box-shadow: 0 0 8px #00ffcc, inset 0 0 5px #000;
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a140e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #5a4531;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8b6d43;
+        }
+
+        .bar-fill {
+            transition: width 0.2s ease-out;
+        }
+    </style>
 </head>
-<body>
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
-        
-        <div id="hud">
-            <div class="bars">
-                <div class="bar-container"><div id="hp-bar" class="bar hp"></div><span id="hp-text">100/100</span></div>
-                <div class="bar-container"><div id="mp-bar" class="bar mp"></div><span id="mp-text">50/50</span></div>
-                <div class="bar-container"><div id="sp-bar" class="bar sp"></div><span id="sp-text">80/80</span></div>
+<body class="w-screen h-screen flex flex-col justify-center items-center relative overflow-hidden select-none">
+
+    <!-- GAME CANVAS CONTAINER -->
+    <div id="game-container" class="relative w-full h-full flex justify-center items-center">
+        <canvas id="gameCanvas" class="block w-full h-full bg-black"></canvas>
+
+        <!-- HUD LAYER -->
+        <div id="hud" class="hidden absolute inset-0 pointer-events-none flex flex-col justify-between p-4">
+            <!-- TOP BAR -->
+            <div class="flex justify-between items-start w-full">
+                <!-- PLAYER STATS -->
+                <div class="panel-bg pixel-border p-3 rounded-lg pointer-events-auto flex gap-4 items-center">
+                    <div id="hud-avatar" class="w-14 h-14 bg-gray-900 border-2 border-yellow-600 rounded flex justify-center items-center overflow-hidden">
+                        <canvas id="avatarCanvas" width="48" height="48"></canvas>
+                    </div>
+                    <div class="flex flex-col gap-1 w-48">
+                        <div class="flex justify-between text-xs font-bold text-yellow-400">
+                            <span id="hud-name">Héroe</span>
+                            <span id="hud-level">Nvl 1</span>
+                        </div>
+                        <!-- HP -->
+                        <div class="w-full bg-gray-900 h-3 border border-gray-700 rounded relative overflow-hidden">
+                            <div id="hp-bar" class="bg-red-600 h-full bar-fill" style="width: 100%;"></div>
+                            <span id="hp-text" class="absolute inset-0 flex justify-center items-center text-[9px] pixel-font text-white drop-shadow">100/100</span>
+                        </div>
+                        <!-- MP -->
+                        <div class="w-full bg-gray-900 h-3 border border-gray-700 rounded relative overflow-hidden">
+                            <div id="mp-bar" class="bg-blue-600 h-full bar-fill" style="width: 100%;"></div>
+                            <span id="mp-text" class="absolute inset-0 flex justify-center items-center text-[9px] pixel-font text-white drop-shadow">50/50</span>
+                        </div>
+                        <!-- STAMINA -->
+                        <div class="w-full bg-gray-900 h-3 border border-gray-700 rounded relative overflow-hidden">
+                            <div id="sp-bar" class="bg-green-600 h-full bar-fill" style="width: 100%;"></div>
+                            <span id="sp-text" class="absolute inset-0 flex justify-center items-center text-[9px] pixel-font text-white drop-shadow">80/80</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOSS HEALTH BAR (HIDDEN BY DEFAULT) -->
+                <div id="boss-hud" class="hidden flex-col items-center w-1/3 panel-bg pixel-border p-2 rounded">
+                    <div id="boss-name" class="text-sm font-bold text-red-500 tracking-wide uppercase mb-1">Jefe Final</div>
+                    <div class="w-full bg-gray-900 h-5 border-2 border-red-800 rounded relative overflow-hidden">
+                        <div id="boss-hp-bar" class="bg-red-600 h-full bar-fill" style="width: 100%;"></div>
+                        <span id="boss-hp-text" class="absolute inset-0 flex justify-center items-center text-xs pixel-font text-white">1000/1000</span>
+                    </div>
+                </div>
+
+                <!-- CLOCK & MINIMAP -->
+                <div class="panel-bg pixel-border p-3 rounded-lg pointer-events-auto flex flex-col items-end gap-2">
+                    <div class="flex items-center gap-2">
+                        <span id="clock-icon" class="text-xl">☀️</span>
+                        <div class="flex flex-col text-right">
+                            <span id="clock-text" class="pixel-font text-xs text-yellow-300">12:00</span>
+                            <span id="biome-text" class="text-xs text-gray-400">Bosque</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div id="clock-container">
-                <span id="clock">08:00</span>
+
+            <!-- BOSS ALERT POPUP -->
+            <div id="boss-warning" class="hidden self-center pointer-events-none text-red-500 font-bold text-3xl tracking-widest animate-bounce text-center drop-shadow-[0_5px_5px_rgba(0,0,0,1)]">
+                ⚠️ ¡UN JEFE PODEROSO HA APARECIDO! ⚠️
+            </div>
+
+            <!-- BOTTOM QUICKBAR -->
+            <div class="self-center panel-bg pixel-border p-2 rounded-xl pointer-events-auto flex gap-2" id="quickbar">
+                <!-- Slots 1 to 9 dynamically injected -->
             </div>
         </div>
 
-        <div id="inventory-ui" class="hidden">
-            <h2>Inventario</h2>
-            <div id="inventory-grid"></div>
+        <!-- CHARACTER CREATION MODAL -->
+        <div id="char-creation" class="absolute inset-0 panel-bg flex flex-col justify-center items-center z-50 p-6">
+            <h1 class="text-4xl text-yellow-500 font-extrabold mb-2 text-center tracking-wider drop-shadow-md">REALMS OF ETERNIA</h1>
+            <p class="text-gray-400 text-sm mb-6">Selecciona tu Raza y comienza tu Leyenda</p>
+
+            <div class="flex flex-col md:flex-row gap-8 items-center max-w-4xl w-full">
+                <!-- PREVIEW CANVAS -->
+                <div class="flex flex-col items-center bg-black/60 p-6 rounded-xl border border-yellow-900/50">
+                    <canvas id="charPreviewCanvas" width="128" height="128" class="bg-gray-950 border-2 border-yellow-700/60 rounded shadow-inner mb-4"></canvas>
+                    <input type="text" id="player-name-input" value="Héroe" maxlength="12" class="bg-gray-900 border border-yellow-700 text-center text-yellow-300 rounded p-1 text-sm focus:outline-none focus:border-yellow-400" />
+                </div>
+
+                <!-- RACE SELECTION CARDS -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
+                    <button onclick="selectRace('human')" class="race-btn btn-medieval p-3 rounded flex flex-col items-start border-yellow-500 text-left">
+                        <div class="font-bold text-yellow-300 text-lg">Humano</div>
+                        <div class="text-xs text-gray-300">Equilibrado. Gran adaptabilidad.</div>
+                        <div class="text-[10px] text-yellow-400/80 mt-2">HP: 100 | MP: 50 | STAM: 80 | STR: 75</div>
+                    </button>
+                    <button onclick="selectRace('elf')" class="race-btn btn-medieval p-3 rounded flex flex-col items-start text-left">
+                        <div class="font-bold text-green-400 text-lg">Elfo</div>
+                        <div class="text-xs text-gray-300">Ágil, afinidad mágica superior.</div>
+                        <div class="text-[10px] text-green-300/80 mt-2">HP: 80 | MP: 110 | STAM: 100 | STR: 55</div>
+                    </button>
+                    <button onclick="selectRace('goblin')" class="race-btn btn-medieval p-3 rounded flex flex-col items-start text-left">
+                        <div class="font-bold text-emerald-500 text-lg">Duende</div>
+                        <div class="text-xs text-gray-300">Rápido, veloz recolección.</div>
+                        <div class="text-[10px] text-emerald-300/80 mt-2">HP: 75 | MP: 65 | STAM: 120 | STR: 55</div>
+                    </button>
+                    <button onclick="selectRace('giant')" class="race-btn btn-medieval p-3 rounded flex flex-col items-start text-left">
+                        <div class="font-bold text-red-400 text-lg">Gigante</div>
+                        <div class="text-xs text-gray-300">Colosal fuerza y resistencia.</div>
+                        <div class="text-[10px] text-red-300/80 mt-2">HP: 160 | MP: 30 | STAM: 65 | STR: 130</div>
+                    </button>
+                    <button onclick="selectRace('witch')" class="race-btn btn-medieval p-3 rounded flex flex-col items-start text-left sm:col-span-2">
+                        <div class="font-bold text-purple-400 text-lg">Bruja</div>
+                        <div class="text-xs text-gray-300">Maestra de pociones y magias oscuras.</div>
+                        <div class="text-[10px] text-purple-300/80 mt-2">HP: 70 | MP: 150 | STAM: 75 | STR: 40</div>
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="mt-8 btn-medieval px-10 py-3 text-xl font-bold rounded-lg tracking-wider text-yellow-300 shadow-lg">
+                COMENZAR AVENTURA
+            </button>
+        </div>
+
+        <!-- INVENTORY & CRAFTING WINDOW (PRESS E/C) -->
+        <div id="inv-craft-window" class="hidden absolute inset-0 bg-black/80 z-40 flex justify-center items-center p-4 pointer-events-auto">
+            <div class="panel-bg pixel-border p-6 rounded-xl w-full max-w-4xl h-[85vh] flex flex-col md:flex-row gap-6 relative">
+                <button onclick="toggleInventory()" class="absolute top-2 right-4 text-red-500 font-bold text-xl hover:text-red-400">✕</button>
+
+                <!-- LEFT: INVENTORY & STATS -->
+                <div class="flex-1 flex flex-col gap-4">
+                    <h2 class="text-xl font-bold text-yellow-400 border-b border-yellow-800 pb-2">Inventario & Equipo</h2>
+                    <!-- STATS SUMMARY -->
+                    <div class="bg-black/50 p-3 rounded border border-yellow-900/40 text-xs grid grid-cols-2 gap-2 text-gray-300">
+                        <div>Raza: <span id="stat-race" class="text-yellow-400">Humano</span></div>
+                        <div>Ataque: <span id="stat-atk" class="text-red-400">10</span></div>
+                        <div>Defensa: <span id="stat-def" class="text-blue-400">0</span></div>
+                        <div>Velocidad: <span id="stat-spd" class="text-green-400">100%</span></div>
+                    </div>
+
+                    <!-- INVENTORY GRID -->
+                    <div id="inventory-grid" class="grid grid-cols-5 gap-2 overflow-y-auto max-h-64 p-2 bg-black/40 rounded border border-yellow-900/30">
+                        <!-- 20 Inventory slots injected dynamically -->
+                    </div>
+                </div>
+
+                <!-- RIGHT: CRAFTING -->
+                <div class="flex-1 flex flex-col gap-4 border-t md:border-t-0 md:border-l border-yellow-800/60 pt-4 md:pt-0 md:pl-6">
+                    <h2 class="text-xl font-bold text-yellow-400 border-b border-yellow-800 pb-2">Fabricación (Crafting)</h2>
+                    <div id="crafting-list" class="flex flex-col gap-2 overflow-y-auto flex-1 pr-2">
+                        <!-- Recipes dynamically generated -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTROLS & PAUSE MENU (ESC) -->
+        <div id="pause-menu" class="hidden absolute inset-0 bg-black/85 z-50 flex flex-col justify-center items-center p-6 text-center">
+            <h2 class="text-3xl font-bold text-yellow-400 mb-4">JUEGO EN PAUSA</h2>
+            
+            <div class="panel-bg pixel-border p-6 rounded-lg max-w-md w-full mb-6 text-left text-sm text-gray-300">
+                <h3 class="font-bold text-yellow-500 mb-3 text-base text-center">CONTROLES DEL JUEGO</h3>
+                <ul class="space-y-1 text-xs">
+                    <li><b class="text-yellow-400">W, A, S, D / Flechas:</b> Moverse</li>
+                    <li><b class="text-yellow-400">Clic Izquierdo:</b> Atacar / Usar herramienta</li>
+                    <li><b class="text-yellow-400">Clic Derecho:</b> Usar Magia / Habilidad</li>
+                    <li><b class="text-yellow-400">E / C:</b> Inventario y Fabricación</li>
+                    <li><b class="text-yellow-400">F:</b> Interactuar / Recoger / Abrir Cofres</li>
+                    <li><b class="text-yellow-400">1 - 9:</b> Seleccionar Barra Rápida</li>
+                    <li><b class="text-yellow-400">ESC:</b> Menú de Pausa</li>
+                </ul>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="togglePause()" class="btn-medieval px-6 py-2 rounded text-yellow-300 font-bold">REANUDAR</button>
+                <button onclick="saveGameProgress()" class="btn-medieval px-6 py-2 rounded text-green-300 font-bold">GUARDAR</button>
+                <button onclick="location.reload()" class="btn-medieval px-6 py-2 rounded text-red-400 font-bold">SALIR AL MENÚ</button>
+            </div>
         </div>
     </div>
 
-    <!-- Carga de scripts desde static/js/ -->
-    <script src="static/js/world.js"></script>
-    <script src="static/js/inventory.js"></script>
-    <script src="static/assets/player_sprites.png"></script>
-    <script src="static/js/game.js"></script>
+    <script>
+        /* ==========================================================================
+           REALMS OF ETERNIA - 2D RPG HTML5 CANVAS GAME ENGINE
+           ========================================================================== */
+
+        // --- GLOBAL CONSTANTS & CONFIG ---
+        const TILE_SIZE = 32;
+        const MAP_WIDTH = 100;
+        const MAP_HEIGHT = 100;
+
+        const RACES = {
+            human:  { name: 'Humano',  hp: 100, mp: 50,  sp: 80,  str: 75,  spd: 3.2, color: '#e0ac69', border: '#8d5b28' },
+            elf:    { name: 'Elfo',    hp: 80,  mp: 110, sp: 100, str: 55,  spd: 3.8, color: '#f3d6b1', border: '#4a8505' },
+            goblin: { name: 'Duende',  hp: 75,  mp: 65,  sp: 120, str: 55,  spd: 4.2, color: '#55aa44', border: '#225511' },
+            giant:  { name: 'Gigante', hp: 160, mp: 30,  sp: 65,  str: 130, spd: 2.5, color: '#c29b7f', border: '#5a3d28' },
+            witch:  { name: 'Bruja',   hp: 70,  mp: 150, sp: 75,  str: 40,  spd: 3.3, color: '#d8b4e2', border: '#6b2d82' }
+        };
+
+        const ITEMS = {
+            wood:        { id: 'wood',        name: 'Madera',          icon: '🪵', type: 'mat' },
+            stone:       { id: 'stone',       name: 'Piedra',          icon: '🪨', type: 'mat' },
+            iron:        { id: 'iron',        name: 'Hierro',          icon: '⛓️', type: 'mat' },
+            gold:        { id: 'gold',        name: 'Oro',             icon: '🪙', type: 'mat' },
+            crystal:     { id: 'crystal',     name: 'Cristal Mágico', icon: '💎', type: 'mat' },
+            herb:        { id: 'herb',        name: 'Planta Medicinal',icon: '🌿', type: 'mat' },
+            sword_wood:  { id: 'sword_wood',  name: 'Espada de Madera',icon: '🗡️', type: 'weapon', atk: 12 },
+            sword_iron:  { id: 'sword_iron',  name: 'Espada de Hierro',icon: '⚔️', type: 'weapon', atk: 25 },
+            staff_magic: { id: 'staff_magic', name: 'Bastón Mágico',   icon: '🪄', type: 'weapon', atk: 35, magic: true },
+            pickaxe:     { id: 'pickaxe',     name: 'Pico de Minero',  icon: '⛏️', type: 'tool', atk: 8 },
+            potion_hp:   { id: 'potion_hp',   name: 'Poción de Vida',  icon: '🧪', type: 'use', heal: 50 },
+            potion_mp:   { id: 'potion_mp',   name: 'Poción de Maná',  icon: '🏺', type: 'use', mana: 50 },
+            torch:       { id: 'torch',       name: 'Antorcha',        icon: '🔦', type: 'use', light: true },
+            boss_relic:  { id: 'boss_relic',  name: 'Reliquia Antigua',icon: '💀', type: 'summon' }
+        };
+
+        const RECIPES = [
+            { id: 'sword_wood', name: 'Espada de Madera', req: { wood: 5 }, result: 'sword_wood' },
+            { id: 'pickaxe',    name: 'Pico de Minero',  req: { wood: 3, stone: 5 }, result: 'pickaxe' },
+            { id: 'sword_iron', name: 'Espada de Hierro',req: { wood: 4, iron: 8 }, result: 'sword_iron' },
+            { id: 'staff_magic',name: 'Bastón Mágico',   req: { wood: 5, crystal: 5 }, result: 'staff_magic' },
+            { id: 'potion_hp',  name: 'Poción de Vida',  req: { herb: 3 }, result: 'potion_hp' },
+            { id: 'potion_mp',  name: 'Poción de Maná',  req: { crystal: 2, herb: 1 }, result: 'potion_mp' },
+            { id: 'boss_relic', name: 'Invocador de Jefe',req: { gold: 5, crystal: 5 }, result: 'boss_relic' }
+        ];
+
+        // --- AUDIO ENGINE (WEB AUDIO API SYNTHESIZER) ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            playTone(freq, type, duration, vol = 0.1) {
+                if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch(e){}
+            }
+            swing() { this.playTone(180, 'sine', 0.1, 0.08); }
+            hit()   { this.playTone(80, 'square', 0.15, 0.12); }
+            pickup(){ this.playTone(523, 'triangle', 0.08, 0.1); }
+            magic() { this.playTone(880, 'sine', 0.3, 0.08); }
+            levelUp(){ this.playTone(659, 'triangle', 0.4, 0.15); }
+        }
+        const soundEngine = new SoundEngine();
+
+        // --- GAME STATE SYSTEM ---
+        const game = {
+            canvas: null,
+            ctx: null,
+            selectedRace: 'human',
+            playerName: 'Héroe',
+            player: null,
+            map: [],
+            resources: [],
+            enemies: [],
+            projectiles: [],
+            particles: [],
+            chests: [],
+            boss: null,
+            keys: {},
+            mouse: { x: 0, y: 0, down: false, rightDown: false },
+            camera: { x: 0, y: 0 },
+            time: 12 * 60, // Minutes in day (0 to 1440)
+            inventory: Array(20).fill(null),
+            quickbarSelect: 0,
+            isPaused: false,
+            gameStarted: false,
+            lastFrame: 0
+        };
+
+        // --- PROCEDURAL SPRITE CANVAS GENERATOR ---
+        const Sprites = {
+            cache: {},
+            get(key, drawFn, width=32, height=32) {
+                if (this.cache[key]) return this.cache[key];
+                const c = document.createElement('canvas');
+                c.width = width;
+                c.height = height;
+                const ctx = c.getContext('2d');
+                drawFn(ctx, width, height);
+                this.cache[key] = c;
+                return c;
+            }
+        };
+
+        // --- WORLD GENERATION & BIOMES ---
+        const BIOMES = {
+            FOREST:   { id: 0, name: 'Bosque',    bg: '#2d5a27', tileColor: '#3a7233', resource: 'wood' },
+            JUNGLE:   { id: 1, name: 'Jungla',    bg: '#163d12', tileColor: '#1d4f18', resource: 'herb' },
+            SNOW:     { id: 2, name: 'Nieve',     bg: '#d0e7f0', tileColor: '#e3f4fb', resource: 'stone' },
+            VOLCANIC: { id: 3, name: 'Volcán',    bg: '#3a1917', tileColor: '#4f201d', resource: 'iron' },
+            SWAMP:    { id: 4, name: 'Pantano',   bg: '#252a1a', tileColor: '#323a23', resource: 'crystal' }
+        };
+
+        function generateWorld() {
+            game.map = [];
+            for (let y = 0; y < MAP_HEIGHT; y++) {
+                game.map[y] = [];
+                for (let x = 0; x < MAP_WIDTH; x++) {
+                    // Biome regions by coordinates
+                    let biome = BIOMES.FOREST;
+                    if (x < 35 && y < 35) biome = BIOMES.SNOW;
+                    else if (x > 65 && y < 35) biome = BIOMES.JUNGLE;
+                    else if (x < 35 && y > 65) biome = BIOMES.SWAMP;
+                    else if (x > 65 && y > 65) biome = BIOMES.VOLCANIC;
+
+                    game.map[y][x] = {
+                        biome: biome,
+                        solid: Math.random() < 0.05 // Random obstacles
+                    };
+                }
+            }
+
+            // Spawn Resource Nodes
+            game.resources = [];
+            for (let i = 0; i < 300; i++) {
+                const rx = Math.floor(Math.random() * (MAP_WIDTH - 4)) + 2;
+                const ry = Math.floor(Math.random() * (MAP_HEIGHT - 4)) + 2;
+                const tile = game.map[ry][rx];
+                
+                let type = 'wood';
+                const rand = Math.random();
+                if (rand < 0.3) type = 'stone';
+                else if (rand < 0.5) type = 'iron';
+                else if (rand < 0.65) type = 'gold';
+                else if (rand < 0.8) type = 'crystal';
+                else type = 'herb';
+
+                game.resources.push({
+                    x: rx * TILE_SIZE,
+                    y: ry * TILE_SIZE,
+                    type: type,
+                    hp: 3
+                });
+            }
+
+            // Spawn Chests
+            game.chests = [];
+            for (let i = 0; i < 20; i++) {
+                game.chests.push({
+                    x: Math.floor(Math.random() * MAP_WIDTH) * TILE_SIZE,
+                    y: Math.floor(Math.random() * MAP_HEIGHT) * TILE_SIZE,
+                    opened: false,
+                    loot: 'gold'
+                });
+            }
+        }
+
+        // --- PLAYER CLASS ---
+        class Player {
+            constructor(raceKey, name) {
+                const stats = RACES[raceKey];
+                this.raceKey = raceKey;
+                this.name = name;
+                this.x = (MAP_WIDTH / 2) * TILE_SIZE;
+                this.y = (MAP_HEIGHT / 2) * TILE_SIZE;
+                this.width = 24;
+                this.height = 24;
+                this.maxHp = stats.hp;
+                this.hp = stats.hp;
+                this.maxMp = stats.mp;
+                this.mp = stats.mp;
+                this.maxSp = stats.sp;
+                this.sp = stats.sp;
+                this.str = stats.str;
+                this.speed = stats.spd;
+                this.level = 1;
+                this.xp = 0;
+                this.xpToNext = 100;
+                this.facing = 'down';
+                this.isAttacking = false;
+                this.attackTimer = 0;
+            }
+
+            update() {
+                let dx = 0, dy = 0;
+                if (game.keys['w'] || game.keys['W'] || game.keys['ArrowUp']) dy -= 1;
+                if (game.keys['s'] || game.keys['S'] || game.keys['ArrowDown']) dy += 1;
+                if (game.keys['a'] || game.keys['A'] || game.keys['ArrowLeft']) dx -= 1;
+                if (game.keys['d'] || game.keys['D'] || game.keys['ArrowRight']) dx += 1;
+
+                if (dx !== 0 && dy !== 0) {
+                    dx *= 0.7071;
+                    dy *= 0.7071;
+                }
+
+                if (dx < 0) this.facing = 'left';
+                if (dx > 0) this.facing = 'right';
+                if (dy < 0) this.facing = 'up';
+                if (dy > 0) this.facing = 'down';
+
+                const newX = this.x + dx * this.speed;
+                const newY = this.y + dy * this.speed;
+
+                // Simple World Boundaries Collision
+                if (newX > TILE_SIZE && newX < (MAP_WIDTH - 1) * TILE_SIZE) this.x = newX;
+                if (newY > TILE_SIZE && newY < (MAP_HEIGHT - 1) * TILE_SIZE) this.y = newY;
+
+                // Regen Mana & Stamina slowly
+                if (this.mp < this.maxMp) this.mp = Math.min(this.maxMp, this.mp + 0.05);
+                if (this.sp < this.maxSp) this.sp = Math.min(this.maxSp, this.sp + 0.1);
+
+                // Attack cooldown
+                if (this.attackTimer > 0) this.attackTimer--;
+            }
+
+            draw(ctx) {
+                const drawX = this.x - game.camera.x;
+                const drawY = this.y - game.camera.y;
+
+                // Base Character Sprite Render
+                const stats = RACES[this.raceKey];
+                ctx.fillStyle = stats.color;
+                ctx.beginPath();
+                ctx.arc(drawX + 12, drawY + 12, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = stats.border;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Direction Indicator / Eyes
+                ctx.fillStyle = '#000';
+                if (this.facing === 'right') ctx.fillRect(drawX + 16, drawY + 8, 4, 4);
+                else if (this.facing === 'left') ctx.fillRect(drawX + 4, drawY + 8, 4, 4);
+                else if (this.facing === 'up') ctx.fillRect(drawX + 8, drawY + 4, 8, 3);
+                else ctx.fillRect(drawX + 6, drawY + 12, 4, 4), ctx.fillRect(drawX + 14, drawY + 12, 4, 4);
+
+                // Swing Visual Effect
+                if (this.attackTimer > 0) {
+                    ctx.strokeStyle = '#ffd700';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(drawX + 12, drawY + 12, 24, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+
+            attack() {
+                if (this.attackTimer > 0) return;
+                this.attackTimer = 15;
+                soundEngine.swing();
+
+                // Hitbox detection
+                const hitRadius = 40;
+                game.enemies.forEach(enemy => {
+                    const dist = Math.hypot((this.x + 12) - (enemy.x + 12), (this.y + 12) - (enemy.y + 12));
+                    if (dist < hitRadius) {
+                        const activeItem = game.inventory[game.quickbarSelect];
+                        const bonusAtk = (activeItem && ITEMS[activeItem.id]?.atk) || 0;
+                        const totalDmg = Math.floor((this.str * 0.2) + bonusAtk + Math.random() * 5);
+                        enemy.takeDamage(totalDmg);
+                    }
+                });
+
+                // Resource Gathering Detection
+                game.resources.forEach((res, index) => {
+                    const dist = Math.hypot((this.x + 12) - (res.x + 16), (this.y + 12) - (res.y + 16));
+                    if (dist < hitRadius) {
+                        res.hp--;
+                        soundEngine.hit();
+                        if (res.hp <= 0) {
+                            addItemToInventory(res.type, 2);
+                            game.resources.splice(index, 1);
+                        }
+                    }
+                });
+            }
+
+            castMagic() {
+                if (this.mp < 15) return;
+                this.mp -= 15;
+                soundEngine.magic();
+
+                // Fire magic projectile toward mouse
+                const worldMouseX = game.mouse.x + game.camera.x;
+                const worldMouseY = game.mouse.y + game.camera.y;
+                const angle = Math.atan2(worldMouseY - (this.y + 12), worldMouseX - (this.x + 12));
+
+                game.projectiles.push({
+                    x: this.x + 12,
+                    y: this.y + 12,
+                    vx: Math.cos(angle) * 7,
+                    vy: Math.sin(angle) * 7,
+                    damage: 30,
+                    life: 60
+                });
+            }
+
+            addXp(amount) {
+                this.xp += amount;
+                if (this.xp >= this.xpToNext) {
+                    this.level++;
+                    this.xp -= this.xpToNext;
+                    this.xpToNext = Math.floor(this.xpToNext * 1.5);
+                    this.maxHp += 15;
+                    this.hp = this.maxHp;
+                    this.maxMp += 10;
+                    this.mp = this.maxMp;
+                    soundEngine.levelUp();
+                }
+            }
+        }
+
+        // --- ENEMY AI & BOSS CLASS ---
+        class Enemy {
+            constructor(x, y, type = 'slime', isBoss = false) {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.isBoss = isBoss;
+                this.width = isBoss ? 64 : 24;
+                this.height = isBoss ? 64 : 24;
+                this.hp = isBoss ? 800 : 40;
+                this.maxHp = this.hp;
+                this.damage = isBoss ? 25 : 8;
+                this.speed = isBoss ? 1.5 : 2.0;
+                this.color = isBoss ? '#990000' : (type === 'skeleton' ? '#e0e0e0' : '#44bb44');
+            }
+
+            update() {
+                if (!game.player) return;
+
+                // Simple Pursuit AI
+                const dist = Math.hypot((game.player.x) - this.x, (game.player.y) - this.y);
+                if (dist < (this.isBoss ? 400 : 200)) {
+                    const angle = Math.atan2(game.player.y - this.y, game.player.x - this.x);
+                    this.x += Math.cos(angle) * this.speed;
+                    this.y += Math.sin(angle) * this.speed;
+
+                    // Attack Player
+                    if (dist < 20) {
+                        game.player.hp -= this.damage * 0.05; // Continuous contact damage
+                        if (game.player.hp <= 0) {
+                            alert("¡Has sido derrotado! Reiniciando la partida...");
+                            location.reload();
+                        }
+                    }
+                }
+            }
+
+            draw(ctx) {
+                const drawX = this.x - game.camera.x;
+                const drawY = this.y - game.camera.y;
+
+                ctx.fillStyle = this.color;
+                ctx.fillRect(drawX, drawY, this.width, this.height);
+                ctx.strokeStyle = '#000';
+                ctx.strokeRect(drawX, drawY, this.width, this.height);
+
+                // Health Bar over Enemy
+                if (this.hp < this.maxHp) {
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(drawX, drawY - 8, this.width, 4);
+                    ctx.fillStyle = '#f00';
+                    ctx.fillRect(drawX, drawY - 8, (this.hp / this.maxHp) * this.width, 4);
+                }
+            }
+
+            takeDamage(dmg) {
+                this.hp -= dmg;
+                soundEngine.hit();
+                if (this.hp <= 0) {
+                    game.player.addXp(this.isBoss ? 200 : 25);
+                    const index = game.enemies.indexOf(this);
+                    if (index > -1) game.enemies.splice(index, 1);
+
+                    // Boss Loot Chest
+                    if (this.isBoss) {
+                        game.chests.push({ x: this.x, y: this.y, opened: false, loot: 'gold' });
+                        document.getElementById('boss-hud').classList.add('hidden');
+                    }
+                }
+            }
+        }
+
+        // --- INVENTORY MANAGEMENT ---
+        function addItemToInventory(itemId, count = 1) {
+            for (let i = 0; i < game.inventory.length; i++) {
+                if (game.inventory[i] && game.inventory[i].id === itemId) {
+                    game.inventory[i].count += count;
+                    soundEngine.pickup();
+                    updateInventoryUI();
+                    return true;
+                }
+            }
+            for (let i = 0; i < game.inventory.length; i++) {
+                if (!game.inventory[i]) {
+                    game.inventory[i] = { id: itemId, count: count };
+                    soundEngine.pickup();
+                    updateInventoryUI();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function updateInventoryUI() {
+            const grid = document.getElementById('inventory-grid');
+            grid.innerHTML = '';
+            game.inventory.forEach((item, index) => {
+                const slot = document.createElement('div');
+                slot.className = 'slot flex flex-col justify-center items-center rounded relative cursor-pointer';
+                if (item) {
+                    const meta = ITEMS[item.id];
+                    slot.innerHTML = `<span class="text-xl">${meta.icon}</span><span class="absolute bottom-0 right-1 text-[10px] font-bold text-white">${item.count}</span>`;
+                    slot.title = `${meta.name}`;
+                    slot.onclick = () => useItem(index);
+                }
+                grid.appendChild(slot);
+            });
+
+            // Quickbar rendering
+            const qbar = document.getElementById('quickbar');
+            qbar.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const item = game.inventory[i];
+                const slot = document.createElement('div');
+                slot.className = `slot flex flex-col justify-center items-center rounded relative cursor-pointer ${game.quickbarSelect === i ? 'active' : ''}`;
+                if (item) {
+                    const meta = ITEMS[item.id];
+                    slot.innerHTML = `<span class="text-xl">${meta.icon}</span><span class="absolute bottom-0 right-1 text-[10px] font-bold text-white">${item.count}</span>`;
+                }
+                slot.onclick = () => { game.quickbarSelect = i; updateInventoryUI(); };
+                qbar.appendChild(slot);
+            }
+        }
+
+        function useItem(index) {
+            const item = game.inventory[index];
+            if (!item) return;
+            const meta = ITEMS[item.id];
+
+            if (meta.type === 'use') {
+                if (meta.heal) game.player.hp = Math.min(game.player.maxHp, game.player.hp + meta.heal);
+                if (meta.mana) game.player.mp = Math.min(game.player.maxMp, game.player.mp + meta.mana);
+                item.count--;
+                if (item.count <= 0) game.inventory[index] = null;
+            } else if (meta.type === 'summon') {
+                spawnBoss();
+                item.count--;
+                if (item.count <= 0) game.inventory[index] = null;
+                toggleInventory();
+            }
+            updateInventoryUI();
+        }
+
+        function craftRecipe(recipe) {
+            // Check requirements
+            for (let [mat, count] of Object.entries(recipe.req)) {
+                const invItem = game.inventory.find(i => i && i.id === mat);
+                if (!invItem || invItem.count < count) return;
+            }
+            // Consume materials
+            for (let [mat, count] of Object.entries(recipe.req)) {
+                const invItem = game.inventory.find(i => i && i.id === mat);
+                invItem.count -= count;
+                if (invItem.count <= 0) {
+                    const idx = game.inventory.indexOf(invItem);
+                    game.inventory[idx] = null;
+                }
+            }
+            addItemToInventory(recipe.result, 1);
+            updateCraftingUI();
+        }
+
+        function updateCraftingUI() {
+            const list = document.getElementById('crafting-list');
+            list.innerHTML = '';
+            RECIPES.forEach(recipe => {
+                const div = document.createElement('div');
+                div.className = 'bg-black/60 p-2 rounded border border-yellow-900/50 flex justify-between items-center text-xs';
+                
+                let reqStr = Object.entries(recipe.req).map(([k, v]) => `${ITEMS[k].name}: ${v}`).join(', ');
+                div.innerHTML = `
+                    <div>
+                        <div class="font-bold text-yellow-300">${recipe.name}</div>
+                        <div class="text-[10px] text-gray-400">Req: ${reqStr}</div>
+                    </div>
+                    <button onclick='craftRecipe(${JSON.stringify(recipe)})' class="btn-medieval px-3 py-1 rounded text-xs font-bold">Crear</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // --- BOSS SPANWING ---
+        function spawnBoss() {
+            game.boss = new Enemy(game.player.x + 100, game.player.y + 100, 'skeleton', true);
+            game.enemies.push(game.boss);
+
+            const bossHud = document.getElementById('boss-hud');
+            bossHud.classList.remove('hidden');
+            document.getElementById('boss-name').innerText = "SEÑOR DE LOS ESQUELETOS";
+
+            const warn = document.getElementById('boss-warning');
+            warn.classList.remove('hidden');
+            setTimeout(() => warn.classList.add('hidden'), 3000);
+        }
+
+        // --- CHARACTER SELECTION UI ---
+        function selectRace(raceKey) {
+            game.selectedRace = raceKey;
+            drawCharPreview();
+        }
+
+        function drawCharPreview() {
+            const canvas = document.getElementById('charPreviewCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const stats = RACES[game.selectedRace];
+            ctx.fillStyle = stats.color;
+            ctx.beginPath();
+            ctx.arc(64, 64, 32, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = stats.border;
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // Eyes
+            ctx.fillStyle = '#000';
+            ctx.fillRect(52, 54, 8, 8);
+            ctx.fillRect(68, 54, 8, 8);
+        }
+
+        // --- MAIN GAME INITIALIZATION ---
+        function startGame() {
+            soundEngine.init();
+            game.playerName = document.getElementById('player-name-input').value || 'Héroe';
+            document.getElementById('char-creation').classList.add('hidden');
+            document.getElementById('hud').classList.remove('hidden');
+
+            game.canvas = document.getElementById('gameCanvas');
+            game.ctx = game.canvas.getContext('2d');
+            resizeCanvas();
+
+            generateWorld();
+            game.player = new Player(game.selectedRace, game.playerName);
+
+            // Starting Starter Pack
+            addItemToInventory('wood', 10);
+            addItemToInventory('sword_wood', 1);
+
+            // Spawn Initial Dynamic Enemies
+            for (let i = 0; i < 40; i++) {
+                game.enemies.push(new Enemy(
+                    Math.random() * MAP_WIDTH * TILE_SIZE,
+                    Math.random() * MAP_HEIGHT * TILE_SIZE,
+                    Math.random() > 0.5 ? 'slime' : 'skeleton'
+                ));
+            }
+
+            setupEventListeners();
+            updateInventoryUI();
+            updateCraftingUI();
+
+            game.gameStarted = true;
+            requestAnimationFrame(gameLoop);
+        }
+
+        function resizeCanvas() {
+            if (!game.canvas) return;
+            game.canvas.width = window.innerWidth;
+            game.canvas.height = window.innerHeight;
+        }
+
+        // --- EVENT LISTENERS ---
+        function setupEventListeners() {
+            window.addEventListener('resize', resizeCanvas);
+            
+            window.addEventListener('keydown', (e) => {
+                game.keys[e.key] = true;
+
+                if (e.key === 'e' || e.key === 'E' || e.key === 'c' || e.key === 'C') {
+                    toggleInventory();
+                }
+                if (e.key === 'Escape') {
+                    togglePause();
+                }
+                if (e.key >= '1' && e.key <= '9') {
+                    game.quickbarSelect = parseInt(e.key) - 1;
+                    updateInventoryUI();
+                }
+            });
+
+            window.addEventListener('keyup', (e) => {
+                game.keys[e.key] = false;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                game.mouse.x = e.clientX;
+                game.mouse.y = e.clientY;
+            });
+
+            window.addEventListener('mousedown', (e) => {
+                if (!game.gameStarted || game.isPaused) return;
+                if (e.button === 0) game.player.attack();
+                if (e.button === 2) game.player.castMagic();
+            });
+
+            window.addEventListener('contextmenu', e => e.preventDefault());
+        }
+
+        function toggleInventory() {
+            const win = document.getElementById('inv-craft-window');
+            win.classList.toggle('hidden');
+        }
+
+        function togglePause() {
+            game.isPaused = !game.isPaused;
+            document.getElementById('pause-menu').classList.toggle('hidden', !game.isPaused);
+        }
+
+        function saveGameProgress() {
+            const saveData = {
+                race: game.selectedRace,
+                name: game.playerName,
+                level: game.player.level,
+                xp: game.player.xp,
+                inventory: game.inventory,
+                x: game.player.x,
+                y: game.player.y
+            };
+            localStorage.setItem('eternia_save', JSON.stringify(saveData));
+            alert("¡Partida Guardada con éxito!");
+        }
+
+        // --- GAME LOOP ---
+        function gameLoop(timestamp) {
+            if (!game.isPaused) {
+                update();
+                render();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        function update() {
+            // Update Time Cycle (Day/Night)
+            game.time = (game.time + 0.1) % 1440;
+            const hours = Math.floor(game.time / 60);
+            const mins = Math.floor(game.time % 60);
+            document.getElementById('clock-text').innerText = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+            document.getElementById('clock-icon').innerText = (hours >= 6 && hours < 18) ? '☀️' : '🌙';
+
+            // Night Spawns Logic
+            if (hours === 0 && mins === 0 && game.enemies.length < 60) {
+                game.enemies.push(new Enemy(
+                    game.player.x + (Math.random() * 400 - 200),
+                    game.player.y + (Math.random() * 400 - 200),
+                    'skeleton'
+                ));
+            }
+
+            // Update Player
+            game.player.update();
+
+            // Update Camera Focus
+            game.camera.x = game.player.x - game.canvas.width / 2;
+            game.camera.y = game.player.y - game.canvas.height / 2;
+
+            // Update Enemies
+            game.enemies.forEach(enemy => enemy.update());
+
+            // Update Projectiles
+            game.projectiles.forEach((p, idx) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+
+                // Collision with enemies
+                game.enemies.forEach(enemy => {
+                    if (Math.hypot(p.x - (enemy.x + 12), p.y - (enemy.y + 12)) < 20) {
+                        enemy.takeDamage(p.damage);
+                        p.life = 0;
+                    }
+                });
+
+                if (p.life <= 0) game.projectiles.splice(idx, 1);
+            });
+
+            // Update HUD UI
+            document.getElementById('hp-bar').style.width = `${(game.player.hp / game.player.maxHp) * 100}%`;
+            document.getElementById('hp-text').innerText = `${Math.ceil(game.player.hp)}/${game.player.maxHp}`;
+            document.getElementById('mp-bar').style.width = `${(game.player.mp / game.player.maxMp) * 100}%`;
+            document.getElementById('mp-text').innerText = `${Math.ceil(game.player.mp)}/${game.player.maxMp}`;
+            document.getElementById('sp-bar').style.width = `${(game.player.sp / game.player.maxSp) * 100}%`;
+            document.getElementById('sp-text').innerText = `${Math.ceil(game.player.sp)}/${game.player.maxSp}`;
+            document.getElementById('hud-level').innerText = `Nvl ${game.player.level}`;
+
+            if (game.boss) {
+                document.getElementById('boss-hp-bar').style.width = `${Math.max(0, (game.boss.hp / game.boss.maxHp) * 100)}%`;
+                document.getElementById('boss-hp-text').innerText = `${Math.max(0, game.boss.hp)}/${game.boss.maxHp}`;
+            }
+        }
+
+        function render() {
+            const ctx = game.ctx;
+            ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
+
+            // Render Tilemap World
+            const startTileX = Math.max(0, Math.floor(game.camera.x / TILE_SIZE));
+            const endTileX = Math.min(MAP_WIDTH, Math.ceil((game.camera.x + game.canvas.width) / TILE_SIZE));
+            const startTileY = Math.max(0, Math.floor(game.camera.y / TILE_SIZE));
+            const endTileY = Math.min(MAP_HEIGHT, Math.ceil((game.camera.y + game.canvas.height) / TILE_SIZE));
+
+            for (let y = startTileY; y < endTileY; y++) {
+                for (let x = startTileX; x < endTileX; x++) {
+                    const tile = game.map[y][x];
+                    ctx.fillStyle = tile.biome.tileColor;
+                    ctx.fillRect(x * TILE_SIZE - game.camera.x, y * TILE_SIZE - game.camera.y, TILE_SIZE, TILE_SIZE);
+                    ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+                    ctx.strokeRect(x * TILE_SIZE - game.camera.x, y * TILE_SIZE - game.camera.y, TILE_SIZE, TILE_SIZE);
+                }
+            }
+
+            // Render Resources
+            game.resources.forEach(res => {
+                const rx = res.x - game.camera.x;
+                const ry = res.y - game.camera.y;
+                ctx.fillStyle = res.type === 'wood' ? '#8b5a2b' : (res.type === 'stone' ? '#7f8c8d' : '#f1c40f');
+                ctx.fillRect(rx + 4, ry + 4, 24, 24);
+            });
+
+            // Render Chests
+            game.chests.forEach(chest => {
+                const cx = chest.x - game.camera.x;
+                const cy = chest.y - game.camera.y;
+                ctx.fillStyle = '#d4af37';
+                ctx.fillRect(cx + 4, cy + 8, 24, 16);
+            });
+
+            // Render Projectiles
+            ctx.fillStyle = '#00ffff';
+            game.projectiles.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x - game.camera.x, p.y - game.camera.y, 6, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Render Enemies & Bosses
+            game.enemies.forEach(enemy => enemy.draw(ctx));
+
+            // Render Player
+            game.player.draw(ctx);
+
+            // Dynamic Day/Night Lighting Overlay Shader
+            const hours = game.time / 60;
+            let nightAlpha = 0;
+            if (hours >= 18 || hours < 6) {
+                nightAlpha = hours >= 20 || hours < 4 ? 0.65 : 0.35;
+            }
+            if (nightAlpha > 0) {
+                ctx.fillStyle = `rgba(5, 5, 25, ${nightAlpha})`;
+                ctx.fillRect(0, 0, game.canvas.width, game.canvas.height);
+            }
+        }
+
+        // Initialize Character Selector Canvas Preview on Page Load
+        window.onload = function() {
+            drawCharPreview();
+        };
+    </script>
 </body>
 </html>
