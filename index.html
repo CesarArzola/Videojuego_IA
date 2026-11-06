@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realms of Eternia</title>
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Capa del Mundo -->
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- HUD Principal -->
+        <div id="hud">
+            <div class="bars">
+                <div class="bar-container"><div id="hp-bar" class="bar hp"></div><span id="hp-text">100/100</span></div>
+                <div class="bar-container"><div id="mp-bar" class="bar mp"></div><span id="mp-text">50/50</span></div>
+                <div class="bar-container"><div id="sp-bar" class="bar sp"></div><span id="sp-text">80/80</span></div>
+            </div>
+            <div id="clock-container">
+                <span id="clock">08:00</span>
+            </div>
+        </div>
+
+        <!-- Inventario (Oculto por defecto) -->
+        <div id="inventory-ui" class="hidden">
+            <h2>Inventario</h2>
+            <div id="inventory-grid"></div>
+        </div>
+    </div>
+
+    <!-- Scripts en orden de dependencias -->
+    <script src="static/js/world.js"></script>
+    <script src="static/js/inventory.js"></script>
+    <script src="static/js/entities.js"></script>
+    <script src="static/js/game.js"></script>
+</body>
+</html>
