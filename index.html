@@ -8,10 +8,8 @@
 </head>
 <body>
     <div id="game-container">
-        <!-- Capa del Mundo -->
         <canvas id="gameCanvas"></canvas>
         
-        <!-- HUD Principal -->
         <div id="hud">
             <div class="bars">
                 <div class="bar-container"><div id="hp-bar" class="bar hp"></div><span id="hp-text">100/100</span></div>
@@ -23,17 +21,16 @@
             </div>
         </div>
 
-        <!-- Inventario (Oculto por defecto) -->
         <div id="inventory-ui" class="hidden">
             <h2>Inventario</h2>
             <div id="inventory-grid"></div>
         </div>
     </div>
 
-    <!-- Scripts en orden de dependencias -->
+    <!-- Carga de scripts desde static/js/ -->
     <script src="static/js/world.js"></script>
     <script src="static/js/inventory.js"></script>
-    <script src="static/js/entities.js"></script>
+    <script src="static/assets/player_sprites.png"></script>
     <script src="static/js/game.js"></script>
 </body>
 </html>
